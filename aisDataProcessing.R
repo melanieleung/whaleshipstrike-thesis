@@ -21,6 +21,21 @@ library(glue)
 getwd()
 setwd("D:/melThesis/")
 
+##### script to loop through all data files ####
+files = list.files(path= "D:/melThesis/2018/", pattern = "*.csv")
+list_dt = lapply(file.path(csv_path, files), fread, header = T)
+
+i <- 1
+for(fileName in files) {
+  assign(paste("data2018_01_0", i, sep = ""),                                   
+         read.table(paste("D:/melThesis/2018/",
+                          files[i], sep = ""),
+                    header = T,
+                    sep = ",",
+                    quote = "\n",
+                    comment.char = ""))
+} #haven't run this, resume after making sure output of this script works on arc pro
+
 ##### test run for first 3 data files ######
 # load files with read.table()
 dataFiles <- list.files(path = "D:/melThesis/2018/", pattern = "*.csv")  # Identify file names
@@ -66,12 +81,20 @@ for (i in 1:3) {
 } # output: "data2018_west_01_0i"
 
 # join Melanie_shipList.csv
-shipList <- as.data.frame(read.csv('Melanie_shipList_IMO.csv', header = T)) # you can change this out for "shipList_processed.csv" now
+shipList <- as.data.frame(read.csv('Melanie_shipList_IMO.csv', header = T))
 
 i <- 1
-for (i in 1:1981) {
-  shipList$IMO[i] <- paste("IMO", shipList$IMO[i], sep = "")
-}
+for (i in 1:3) {
+  eval(as.name(paste("data2018_west_01_0", i, sep = ""))) <- 
+    gsub("IMO", "", eval(as.name(paste("data2018_west_01_0", i, sep = ""))))
+} # output: updated "data2018_west_01_0i" dataFrames without "IMO" in character string
+
+i <- 1
+for (i in 1:3) {
+  eval(as.name(paste("data2018_east_01_0", i, sep = ""))) <- 
+    gsub("IMO", "", eval(as.name(paste("data2018_east_01_0", i, sep = ""))))
+} # output: updated "data2018_east_01_0i" dataFrames without "IMO" in character string
+
 
 write.csv(shipList, "D:/melThesis/shipList_processed.csv")
 
