@@ -17,6 +17,7 @@ library(plyr)
 library(readr)
 library(lubridate)
 library(glue)
+library(stringr)
 
 getwd()
 setwd("D:/melThesis/")
@@ -80,24 +81,36 @@ for (i in 1:3) {
            filter(IMO != "" & LON >= -117 & LON <= -125))
 } # output: "data2018_west_01_0i"
 
-# join Melanie_shipList.csv
+# fix IMO attribute on raw AIS files
 shipList <- as.data.frame(read.csv('Melanie_shipList_IMO.csv', header = T))
 
+# template for future attempt that doesn't use gsub()
 i <- 1
 for (i in 1:3) {
-  eval((as.name(paste("data2018_west_01_0", i, sep = "")))) <-
-    gsub("IMO", "", eval(as.name(paste("data2018_west_01_0", i, sep = ""))))
-} # output: updated "data2018_west_01_0i" dataFrames without "IMO" in character string
+  assign(paste("data2018_east_01_0", i, sep = ""),                                   
+         eval(as.name(paste("data2018_01_0", i, sep = ""))) %>% 
+           str_remove("IMO", "", eval(as.name(paste("data2018_east_01_0", i, sep = "")))))
+}
+# end of that attempt
 
 i <- 1
 for (i in 1:3) {
-  eval((as.name(paste("data2018_east_01_0", i, sep = "")))) <-
-    gsub("IMO", "", eval(as.name(paste("data2018_west_01_0", i, sep = ""))))
-} # output: updated "data2018_east_01_0i" dataFrames without "IMO" in character string
+  assign(paste("data2018_east_01_0", i, sep = ""),                                   
+         eval(as.name(paste("data2018_01_0", i, sep = ""))) %>% 
+           gsub("IMO", "", eval(as.name(paste("data2018_east_01_0", i, sep = "")))))
+         }
+
+i <- 1
+for (i in 1:3) {
+  assign(paste("data2018_west_01_0", i, sep = ""),                                   
+         eval(as.name(paste("data2018_01_0", i, sep = ""))) %>% 
+           gsub("IMO", "", eval(as.name(paste("data2018_west_01_0", i, sep = "")))))
+}
+
 
 write.csv(shipList, "D:/melThesis/shipList_processed.csv")
 
-# join/merge function:
+# join Melanie_shipList.csv
 i <- 1
 for (i in 1:3) {
   assign(paste("data2018_west_01_0", i, sep = ""),
