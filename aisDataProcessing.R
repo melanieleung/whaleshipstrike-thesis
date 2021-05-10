@@ -88,15 +88,15 @@ shipList <- as.data.frame(read.csv('Melanie_shipList_IMO.csv', header = T))
 i <- 1
 for (i in 1:3) {
   assign(paste("data2018_east_01_0", i, sep = ""),                                   
-         eval(as.name(paste("data2018_01_0", i, sep = ""))) %>% 
-           str_remove("IMO", "", eval(as.name(paste("data2018_east_01_0", i, sep = "")))))
+         eval(as.name(paste("data2018_east_01_0", i, sep = ""))) %>% 
+           substr(paste("data2018_east_01_0", i, sep = ""), 4, 10))
 }
 # end of that attempt
 
 i <- 1
 for (i in 1:3) {
   assign(paste("data2018_east_01_0", i, sep = ""),                                   
-         eval(as.name(paste("data2018_01_0", i, sep = ""))) %>% 
+         eval(as.name(paste("data2018_west_01_0", i, sep = ""))) %>% 
            gsub("IMO", "", eval(as.name(paste("data2018_east_01_0", i, sep = "")))))
          }
 
