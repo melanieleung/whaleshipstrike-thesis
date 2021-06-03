@@ -1,0 +1,149 @@
+---
+title: "aisDataProcessing_remote"
+author: "Melanie Leung"
+date: "5/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###### unzipping files ######
+```{r}
+file <- sub(".gz$", "", file)
+tmpfile <- tempfile()
+remove_tmpfile <- FALSE
+if(!file.exists(file)) { # need to unzip
+  system(paste0("gunzip -c ", file, ".gz > ", tmpfile))
+  remove_tmpfile <- TRUE
+  file <- tmpfile
+}
+
+UnZip("")
+```
+
+###### load packages & setup working directory #####
+```{r}
+library(readr)
+library(tidyverse)
+library(dplyr)
+library(plyr)
+library(readr)
+library(lubridate)
+library(glue)
+library(stringr)
+
+getwd()
+setwd("C:/Users/collabuser/Desktop/melThesis")
+
+```
+
+##### script to loop through all data files ####
+```{r}
+files = list.files(path= "D:/melThesis/2018/", pattern = "*.csv")
+list_dt = lapply(file.path(csv_path, files), fread, header = T)
+
+i <- 1
+for(fileName in files) {
+  assign(paste("data2018_01_0", i, sep = ""),                                   
+         read.table(paste("D:/melThesis/2018/",
+                          files[i], sep = ""),
+                    header = T,
+                    sep = ",",
+                    quote = "\n",
+                    comment.char = ""))
+} #haven't run this, resume after making sure output of this script works on arc pro
+```
+
+
+##### test run for first 3 data files
+```{r}
+
+# load files with read.table()
+dataFiles <- list.files(path = "C:/Users/collabuser/Desktop/melThesis/data", pattern = "*.csv")
+i <- 1
+for(i in seq_along(dataFiles)) {                              
+  assign(dataFiles[i],                                   
+         read.table(paste("C:/Users/collabuser/Desktop/melThesis/data/",
+                           dataFiles[i], sep = ""),
+                    header = T,
+                    sep = ",",
+                    quote = "\n",
+                    comment.char = ""))
+} # output: "data2018_01_0i" with 17 variables
+
+# select() to keep: MMSI, BaseDateTime, Lat, Lon, SOG, VesselName, IMO
+i <- 1
+for(i in seq_along(dataFiles)) {                              
+  assign(dataFiles[i],                             
+         eval(as.name(dataFiles[i])) %>%
+           select(MMSI, BaseDateTime, LAT, LON, SOG, VesselName, IMO))
+} # output: "data2018_01_0i" with 7 variables
+
+
+# fix IMO attribute's character string
+i <- 1
+for (i in seq_along(dataFiles)) {
+  temp <- eval(as.name(dataFiles[i]))
+  temp$IMO <- gsub("^.{0,3}", "", temp$IMO)
+  assign(dataFiles[i], temp)
+}
+
+# remove empty IMO rows & filter to split east/west coast
+# East coast:
+i <- 1
+for (i in seq_along(dataFiles)) {
+  assign(paste("east_", dataFiles[i], sep=""),                             
+         eval(as.name(dataFiles[i])) %>%
+           filter(IMO != "" & LON >= -67 & LON <= -82))
+} # output: "east_AIS_2018_01_i.csv"
+
+# West coast: 
+i <- 1
+for (i in seq_along(dataFiles)) {
+  assign(paste("west_", dataFiles[i], sep=""),                             
+         eval(as.name(dataFiles[i])) %>%
+           filter(IMO != "" & LON >= -117 & LON <= -125))
+} # output: "west_AIS_2018_01_i.csv"
+
+## LEFT OFF HERE: need to edit the rest of the for loops and load shipList
+
+shipList <- read.csv("")
+write.csv(shipList, "D:/melThesis/shipList_processed.csv")
+
+# join Melanie_shipList.csv
+i <- 1 # EAST COAST
+for (i in seq_along(dataFiles)) {
+  assign(paste("east_", dataFiles[i], sep=""),
+         merge(x = eval(as.name(paste("east_", dataFiles[i], sep=""))),
+               y = shipList,
+               by.x = "IMO",
+               by.y = "IMO"))
+}
+
+i <- 1 # WEST COAST
+for (i in seq_along(dataFiles)) {
+  assign(paste("west_", dataFiles[i], sep=""),
+         merge(x = eval(as.name(paste("west_", dataFiles[i], sep=""))),
+               y = shipList,
+               by.x = "IMO",
+               by.y = "IMO"))
+}
+
+### SAVE processed data into CSVs
+i <- 1
+for (i in 1:3) {
+  write.csv(eval(as.name(paste("data2018_east_01_0", i, sep = ""))),
+            paste("D:/melThesis/2018east/AIS_2018_01_0", i, ".csv", sep = ""))
+}
+
+i <- 1
+for (i in 1:3) {
+  write.csv(paste("data2018_west_01_0", i),
+            paste("D:/melThesis/2018west/AIS_2018_01_0", i, ".csv", sep = ""))
+}
+
+```
+
+
